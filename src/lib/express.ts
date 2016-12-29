@@ -42,8 +42,8 @@ export function registerPost<TArg, TRes>(method: Api<TArg,TRes> | Api<TArg,TRes>
 function internalRegisterPost<TArg, TRes>(method: Api<TArg,TRes>) {
     app.post('/' + method.name, (request, response) => {
         logger(`POST ${method.name} `);
-        const args = request.body as TArg;
         try {
+            const args = request.body as TArg;
             method(args).then(res => {
                 response.send(res);
             }).catch(err => {

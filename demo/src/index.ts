@@ -6,7 +6,7 @@ function test(args: { name: string }) {
 }
 
 function testCall () {
-    
+    app.logger('testCall');
     return app.call('demo')('test')({name:'test'});
 }
 
