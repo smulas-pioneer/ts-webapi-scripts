@@ -1,12 +1,12 @@
 
 export * from './lib/express';
-export { call, startServiceLocator } from './lib/service-locator';
 
 /* scripts */
-import { call, startServiceLocator } from './lib/service-locator';
-
+import { startServiceLocator } from './lib/serviceLocator';
 import { test } from './scripts/test';
 import * as  program from 'commander';
+
+export {startServiceLocator}
 
 program
     .version('1.0.0')

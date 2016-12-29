@@ -1,73 +1,150 @@
 import * as express from 'express';
 import * as parser from 'body-parser';
-import {selfRegister} from './service-locator';
-import {logInfo} from './log';
+import fetch, { Response } from 'node-fetch';
 
 const path = require('path');
 const cors = require('cors');
-const app = express();
-const service = {
-    name: '',
-    port: 0
-}
 
-export let logger: (msg:string) =>void = console.info;
+const serviceLocatorUrl = process.env.SERVICE_LOCATOR_URL || 'http://localhost:6969';
 
-app.use(cors());
-app.options('*', cors());
-app.use(parser.json());
-app.use(parser.urlencoded({ extended: false }));
+export type Api<TArg, TRes> = <TArg, TRes>(arg: TArg) => Promise<TRes>;
 
-//Error Handler
-const errorHandler = (err, req, res, next) => {
-    logger("ERROR!!!!" + JSON.stringify(err, null, 2));
-    res.status(500);
-    res.send(err);
-}
+export const createService = (name: string, port: number) => {
+    let _services: { [name: string]: string } = {};
 
-app.get('/ver', (req, res) => {
-    res.send('1.0.0');
-});
+    const app = express();
+    app.use(cors());
+    app.options('*', cors());
+    app.use(parser.json());
+    app.use(parser.urlencoded({ extended: false }));
+    app.get('/ver', (req, res) => {
+        res.send('1.0.0');
+    });
 
-export type Api<TArg,TRes> = <TArg, TRes>(arg: TArg) => Promise<TRes>;
+    app.get('/services', (req, res) => {
+        res.send(_services);
+    });
 
-export function registerPost<TArg, TRes>(method: Api<TArg,TRes> | Api<TArg,TRes>[]) {
-    if (Array.isArray(method)) {
-        (method as Api<TArg,TRes>[]).forEach(internalRegisterPost);
-    } else {
-        internalRegisterPost(method as Api<TArg,TRes>);
+    app.get('/services/:serviceName', (req, res) => {
+        res.send(_services[req["serviceName"]]);
+    });
+
+    app.get('/register', (req, res) => {
+        const {service, endpoint} = req.query;
+        if (!service) res.status(500).send('service arg missing');
+        if (!endpoint) res.status(500).send('endpoint arg missing');
+        _services[service] = endpoint;
+        log(`registered service ${service} on endpoint ${endpoint}`);
+        res.send({ service, endpoint });
+    });
+
+    app.get('/register/:service/:port', (req, res) => {
+        const {service, port} = req.params;
+        const endpoint = req.ip.replace('::ffff:', 'http://') + ":" + port;
+        _services[service] = endpoint;
+        log(`registered service ${service} on endpoint ${endpoint}`);
+        res.send({ service, endpoint });
+    });
+
+    const log = (msg: string) => console.info(`${port} ${name} ${msg}`);
+    const internalRegisterPost = <TArg, TRes>(method: Api<TArg, TRes>) => {
+        app.post('/' + method.name, (request, response) => {
+            log(`POST ${method.name} args:${JSON.stringify(request.body)}`);
+            try {
+                const args = request.body as TArg;
+                method(args).then(res => {
+                    log(`OK  : ${JSON.stringify(res)}`);
+                    response.send(res);
+                }).catch(err => {
+                    log(`ERR : ${JSON.stringify(err)}`);
+                    response.status(610).send(err);
+                });
+            } catch (err) {
+                response.status(611).send(err);
+            }
+        });
     }
-}
 
-function internalRegisterPost<TArg, TRes>(method: Api<TArg,TRes>) {
-    app.post('/' + method.name, (request, response) => {
-        logger(`POST ${method.name} args:${JSON.stringify(request.body)}`);
-        try {
-            const args = request.body as TArg;
-            method(args).then(res => {
-                logger(`OK  : ${JSON.stringify(res)}`);
-                response.send(res);
-            }).catch(err => {
-                logger(`ERR : ${JSON.stringify(err)}`);
-                response.status(610).send(err);
-            });
-        } catch (err) {
-            response.status(611).send(err);
+    const internalRegisterGet = <TArg, TRes>(method: Api<TArg, TRes>) => {
+        app.get('/' + method.name, (request, response) => {
+            log(`POST ${method.name} args:${JSON.stringify(request.query)}`);
+            try {
+                const args = request.query as TArg;
+                method(args).then(res => {
+                    log(`OK  : ${JSON.stringify(res)}`);
+                    response.send(res);
+                }).catch(err => {
+                    log(`ERR : ${JSON.stringify(err)}`);
+                    response.status(610).send(err);
+                });
+            } catch (err) {
+                response.status(611).send(err);
+            }
+        });
+    }
+
+
+    //Error Handler
+    const errorHandler = (err, req, res, next) => {
+        log("ERROR!!!!" + JSON.stringify(err, null, 2));
+        res.status(500);
+        res.send(err);
+    }
+
+
+
+    const getService = (name: string) => {
+        if (_services[name]) {
+            return Promise.resolve(_services[name]);
+        } else {
+            return fetch(serviceLocatorUrl + '/services/' + name).then(res => res.text()).then(
+                endpoint => {
+                    _services[name] = endpoint;
+                    return endpoint;
+                }
+            )
         }
-    });
-}
+    }
 
-export function start(name:string,port: number) {
-    app.use(errorHandler);
-    app.listen(port, () => {
-        service.name = name;
-        service.port = port;
-        logger = logInfo(service);
-        logger('started');
-        logger(JSON.stringify(app.routes,null,2));
-                
-        /* register */
-        selfRegister(name,port).then(res=>logger('registered'));
-    });
-}
+    const selfRegister = (serviceName: string, port: number) => {
+        return fetch(`${serviceLocatorUrl}/register/${serviceName}/${port}`).then(res => res.json());
+    }
 
+    return {
+        registerGet: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => {
+            if (Array.isArray(method)) {
+                (method as Api<TArg, TRes>[]).forEach(internalRegisterGet);
+            } else {
+                internalRegisterGet(method as Api<TArg, TRes>);
+            }
+        },
+        registerPost: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => {
+            if (Array.isArray(method)) {
+                (method as Api<TArg, TRes>[]).forEach(internalRegisterPost);
+            } else {
+                internalRegisterPost(method as Api<TArg, TRes>);
+            }
+        },
+        start: () => {
+            app.use(errorHandler);
+            app.listen(port, () => {
+                log('started');
+
+                /* register */
+                selfRegister(name, port).then(res => log('registered'));
+            });
+        },
+        call: (serviceName: string) => (method: string) => (args: any, headers?: any) => {
+            log(`call ${serviceName}/${method} ${JSON.stringify(args)}`);
+            return getService(serviceName).then(endpoint => {
+                return fetch(endpoint + '/' + method, {
+                    headers,
+                    method: 'post',
+                    body: args
+                }).then(res => res.json());
+            });
+        },
+        log
+    }
+
+}
