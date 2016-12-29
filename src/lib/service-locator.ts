@@ -22,13 +22,15 @@ app.get('/register', (req, res) => {
     if ( !service ) res.status(500).send('service arg missing');
     if ( !endpoint ) res.status(500).send('endpoint arg missing');
     _services[service] = endpoint;
-    res.send('ok');
+    console.info(`registered service ${service} on endpoint ${endpoint}`);
+    res.send({service,endpoint});
 });
 
 app.get('/register/:service/:port', (req, res) => {
     const {service,port} = req.params;
     const endpoint = req.ip.replace('::ffff','http://') + ":" + port;
     _services[service] = endpoint;
+    console.info(`registered service ${service} on endpoint ${endpoint}`);
     res.send({service,endpoint});
 });
 
