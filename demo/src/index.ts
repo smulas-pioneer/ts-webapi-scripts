@@ -7,7 +7,7 @@ function test(args: { name: string }) {
 
 app.registerPost(test);
 app.startServiceLocator();
-app.start(5001);
+app.start('demo',5001);
 
 
 

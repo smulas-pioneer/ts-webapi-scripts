@@ -1,4 +1,4 @@
-import 'whatwg-fetch';
+import fetch from 'node-fetch';
 import * as express from 'express';
 const cors = require('cors');
 
