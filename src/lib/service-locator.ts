@@ -2,7 +2,7 @@ import 'whatwg-fetch';
 import * as express from 'express';
 const cors = require('cors');
 
-let _services: { [name: string]: string };
+let _services: { [name: string]: string } = {};
 
 /*SERVER */
 const app = express();
