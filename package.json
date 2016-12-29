@@ -5,8 +5,11 @@
   "repository": {
     "url": "https://github.com/smulas/ts-webapi-scripts.git"
   },
-  "main": "build/index.js",
-  "typings": "bulid/index.d.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files" :[
+    "dist"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
