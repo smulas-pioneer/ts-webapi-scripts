@@ -17,8 +17,11 @@ app.get('/services/:serviceName', (req, res) => {
     res.send(_services[req["serviceName"]]);
 });
 
-app.get('/register/:serviceName/:endPoint', (req, res) => {
-    _services[req["serviceName"]] = req["endPoint"];
+app.get('/register', (req, res) => {
+    const {service,endpoint} = req.query;
+    if ( !service ) res.status(500).send('service arg missing');
+    if ( !endpoint ) res.status(500).send('endpoint arg missing');
+    _services[service] = endpoint;
     res.send('ok');
 });
 

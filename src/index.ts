@@ -1,16 +1,16 @@
 export * from './lib/express';
-export {call,startServiceLocator} from './lib/service-locator';
+export { call, startServiceLocator } from './lib/service-locator';
 
 /* scripts */
 
-import {test} from './scripts/test';
+import { test } from './scripts/test';
 import * as  program from 'commander';
 
 program
     .version('1.0.0')
-    .option('-t, --test <dir>','Run tests on selected dir')
+    .option('-t, --test <dir>', 'Run tests on selected dir')
     .parse(process.argv);
 
-if ( program['test']){
+if (program['test']) {
     test(program['test']);
 }
