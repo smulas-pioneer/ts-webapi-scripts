@@ -5,7 +5,7 @@ function test(args: { name: string }) {
     return Promise.resolve(args.name + ' ok');
 }
 
-function testCall () {
+function testCall (args:any) {
     app.logger('testCall');
     return app.call('demo')('test')({name:'test'});
 }

@@ -41,12 +41,14 @@ export function registerPost<TArg, TRes>(method: Api<TArg,TRes> | Api<TArg,TRes>
 
 function internalRegisterPost<TArg, TRes>(method: Api<TArg,TRes>) {
     app.post('/' + method.name, (request, response) => {
-        logger(`POST ${method.name} `);
+        logger(`POST ${method.name} args:${JSON.stringify(request.body)}`);
         try {
             const args = request.body as TArg;
             method(args).then(res => {
+                logger(`OK  : ${JSON.stringify(res)}`);
                 response.send(res);
             }).catch(err => {
+                logger(`ERR : ${JSON.stringify(err)}`);
                 response.status(610).send(err);
             });
         } catch (err) {
