@@ -1,8 +1,8 @@
 import * as express from 'express';
 import * as parser from 'body-parser';
+import {selfRegister} from './service-locator';
 const path = require('path');
 const cors = require('cors');
-
 const app = express();
 
 app.use(cors());
@@ -37,9 +37,11 @@ export function registerPost<TArg, TRes>(method: <TArg, TRes>(arg: TArg) => Prom
     });
 }
 
-export function start(port: number) {
+export function start(name:string,port: number) {
     app.use(errorHandler);
     app.listen(port, () => {
         console.info(`service started on port ${port}`);
+        /* register */
+        selfRegister(name,port);
     });
 }

@@ -25,6 +25,14 @@ app.get('/register', (req, res) => {
     res.send('ok');
 });
 
+app.get('/register/:service/:port', (req, res) => {
+    const {service,port} = req.params;
+    const endpoint = req.ip + ":" + port;
+    _services[service] = endpoint;
+    res.send('ok');
+});
+
+
 export function startServiceLocator(port = 6969) {
     app.listen(port, () => {
         console.info(`Service Locator started on port ${port}`);
@@ -47,13 +55,16 @@ export function getService(name: string) {
     }
 }
 
-
 export const call = (serviceName: string) => (method: string) => (args: any, headers?: any) => {
     return getService(serviceName).then(endpoint => {
         return fetch(endpoint + '/' + method, {
             headers,
+            method:'post',
             body: args
         }).then(res => res.json());
     });
 }
 
+export const selfRegister = (serviceName:string, port: number) => {
+    return fetch(`${serviceLocatorUrl}/register/${serviceName}/${port}`).then(res=>res.json());
+}
