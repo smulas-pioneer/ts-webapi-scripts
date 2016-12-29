@@ -1,8 +1,12 @@
 import 'mocha';
 import * as expect from 'expect';
+import * as sl from '../src/lib/service-locator';
+
+
 
 describe('test', ()=>{
     it('test',()=>{
-        expect(1).toBe(1);
-    });
+        sl.selfRegister('test',100);
+
+   });
 });

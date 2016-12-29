@@ -1,7 +1,9 @@
+
 export * from './lib/express';
 export { call, startServiceLocator } from './lib/service-locator';
 
 /* scripts */
+import { call, startServiceLocator } from './lib/service-locator';
 
 import { test } from './scripts/test';
 import * as  program from 'commander';
@@ -9,8 +11,17 @@ import * as  program from 'commander';
 program
     .version('1.0.0')
     .option('-t, --test <dir>', 'Run tests on selected dir')
+    .option('-s, --service-locator ','Run service locator')
     .parse(process.argv);
 
+
+console.log('started',process.argv);
+
+
 if (program['test']) {
+    console.log('test runner mode');
     test(program['test']);
+} else if(program['serviceLocator']) {
+    console.log('service-locator mode');
+    startServiceLocator();
 }

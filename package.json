@@ -11,8 +11,9 @@
     "dist"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublish": "npm version patch && tsc"
+    "build": "tsc && echo built" ,
+    "test": "tsc && node dist/index.js --test __test__",
+    "release": "npm version patch && tsc && npm publish"
   },
   "keywords": [],
   "author": "",

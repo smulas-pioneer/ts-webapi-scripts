@@ -29,7 +29,7 @@ app.get('/register/:service/:port', (req, res) => {
     const {service,port} = req.params;
     const endpoint = req.ip + ":" + port;
     _services[service] = endpoint;
-    res.send('ok');
+    res.send({service,endpoint});
 });
 
 
