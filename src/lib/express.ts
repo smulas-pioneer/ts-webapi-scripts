@@ -29,7 +29,7 @@ app.get('/ver', (req, res) => {
 export type Api<TArg,TRes> = <TArg, TRes>(arg: TArg) => Promise<TRes>;
 
 export function registerPost<TArg, TRes>(method: Api<TArg,TRes> | Api<TArg,TRes>[]) {
-    if (method.length) {
+    if (Array.isArray(method)) {
         (method as Api<TArg,TRes>[]).forEach(internalRegisterPost);
     } else {
         internalRegisterPost(method as Api<TArg,TRes>);
