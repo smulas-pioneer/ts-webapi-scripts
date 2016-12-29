@@ -27,7 +27,7 @@ app.get('/register', (req, res) => {
 
 app.get('/register/:service/:port', (req, res) => {
     const {service,port} = req.params;
-    const endpoint = req.ip + ":" + port;
+    const endpoint = req.ip.replace('::ffff','http://') + ":" + port;
     _services[service] = endpoint;
     res.send({service,endpoint});
 });
