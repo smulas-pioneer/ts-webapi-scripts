@@ -6,12 +6,11 @@ function test(args: { name: string }) {
 }
 
 function testCall () {
+    
     return app.call('demo')('test')({name:'test'});
 }
 
-
-app.registerPost(test);
-app.registerPost(testCall);
+app.registerPost([test,testCall]);
 
 app.startServiceLocator();
 app.start('demo',5001);

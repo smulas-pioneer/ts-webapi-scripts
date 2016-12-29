@@ -11,7 +11,7 @@ const service = {
     port: 0
 }
 
-let logger: (msg:string) =>void = console.info;
+export let logger: (msg:string) =>void = console.info;
 
 app.use(cors());
 app.options('*', cors());

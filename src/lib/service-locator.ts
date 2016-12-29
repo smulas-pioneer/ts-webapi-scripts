@@ -62,7 +62,7 @@ export function getService(name: string) {
 }
 
 export const call = (serviceName: string) => (method: string) => (args: any, headers?: any) => {
-    logger (`call ${serviceName}/${method}`)
+    logger (`call ${serviceName}/${method}`);
     return getService(serviceName).then(endpoint => {
         return fetch(endpoint + '/' + method, {
             headers,
