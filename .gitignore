@@ -5,6 +5,7 @@ node_modules
 
 # production
 dist
+demo/build
 
 # misc
 .DS_Store

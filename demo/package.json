@@ -1,0 +1,17 @@
+{
+  "name": "ts-webapi-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "ts-webapi-scripts": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node node_modules/ts-webapi-scripts --test __test__",
+    "start": "tsc && node build/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
