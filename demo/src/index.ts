@@ -5,7 +5,14 @@ function test(args: { name: string }) {
     return Promise.resolve(args.name + ' ok');
 }
 
+function testCall () {
+    return app.call('demo')('test')({name:'test'});
+}
+
+
 app.registerPost(test);
+app.registerPost(testCall);
+
 app.startServiceLocator();
 app.start('demo',5001);
 
