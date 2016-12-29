@@ -1,8 +1,11 @@
 import fetch,{Response} from 'node-fetch';
 import * as express from 'express';
+import {logInfo} from './log';
+
 const cors = require('cors');
 
 let _services: { [name: string]: string } = {};
+let logger: (msg:string) =>void = console.info;
 
 /*SERVER */
 const app = express();
@@ -22,7 +25,7 @@ app.get('/register', (req, res) => {
     if ( !service ) res.status(500).send('service arg missing');
     if ( !endpoint ) res.status(500).send('endpoint arg missing');
     _services[service] = endpoint;
-    console.info(`registered service ${service} on endpoint ${endpoint}`);
+    logger(`registered service ${service} on endpoint ${endpoint}`);
     res.send({service,endpoint});
 });
 
@@ -30,14 +33,15 @@ app.get('/register/:service/:port', (req, res) => {
     const {service,port} = req.params;
     const endpoint = req.ip.replace('::ffff','http://') + ":" + port;
     _services[service] = endpoint;
-    console.info(`registered service ${service} on endpoint ${endpoint}`);
+    logger(`registered service ${service} on endpoint ${endpoint}`);
     res.send({service,endpoint});
 });
 
 
 export function startServiceLocator(port = 6969) {
     app.listen(port, () => {
-        console.info(`Service Locator started on port ${port}`);
+        logger = logInfo({name:'sevice-locator',port});
+        logger(`Service Locator started on port ${port}`);
     });
 }
 

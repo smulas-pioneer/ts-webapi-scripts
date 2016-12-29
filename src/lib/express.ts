@@ -1,6 +1,8 @@
 import * as express from 'express';
 import * as parser from 'body-parser';
 import {selfRegister} from './service-locator';
+import {logInfo} from './log';
+
 const path = require('path');
 const cors = require('cors');
 const app = express();
@@ -9,6 +11,7 @@ const service = {
     port: 0
 }
 
+let logger: (msg:string) =>void = console.info;
 
 app.use(cors());
 app.options('*', cors());
@@ -17,7 +20,7 @@ app.use(parser.urlencoded({ extended: false }));
 
 //Error Handler
 const errorHandler = (err, req, res, next) => {
-    logInfo("ERROR!!!!" + JSON.stringify(err, null, 2));
+    logger("ERROR!!!!" + JSON.stringify(err, null, 2));
     res.status(500);
     res.send(err);
 }
@@ -38,7 +41,7 @@ export function registerPost<TArg, TRes>(method: Api<TArg,TRes> | Api<TArg,TRes>
 
 function internalRegisterPost<TArg, TRes>(method: Api<TArg,TRes>) {
     app.post('/' + method.name, (request, response) => {
-        logInfo(`POST ${method.name} `);
+        logger(`POST ${method.name} `);
         const args = request.body as TArg;
         try {
             method(args).then(res => {
@@ -57,15 +60,12 @@ export function start(name:string,port: number) {
     app.listen(port, () => {
         service.name = name;
         service.port = port;
-        logInfo('started');
-
-        logInfo(JSON.stringify(app.routes,null,2));
+        logger = logInfo(service);
+        logger('started');
+        logger(JSON.stringify(app.routes,null,2));
                 
         /* register */
-        selfRegister(name,port).then(res=>logInfo('registered'));
+        selfRegister(name,port).then(res=>logger('registered'));
     });
 }
 
-export function logInfo (message: string ){
-    console.info(`${service.name}(port:${service.port}) ${message}`);
-}
