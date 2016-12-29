@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+import fetch,{Response} from 'node-fetch';
 import * as express from 'express';
 const cors = require('cors');
 
@@ -61,7 +61,7 @@ export const call = (serviceName: string) => (method: string) => (args: any, hea
             headers,
             method:'post',
             body: args
-        }).then(res => res.json());
+        }).then(res=>res.json());
     });
 }
 
