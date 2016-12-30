@@ -1,4 +1,4 @@
-import {createService,startServiceLocator} from 'ts-webapi-scripts';
+import {startServiceLocator,createService} from 'ts-webapi-scripts';
 var app = createService('demo',5001);
 
 function test(args: { name: string }) {

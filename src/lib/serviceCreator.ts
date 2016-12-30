@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as parser from 'body-parser';
 import fetch, { Response } from 'node-fetch';
+import * as http from "http";
 
 const path = require('path');
 const cors = require('cors');
@@ -12,15 +13,15 @@ export type Api<TArg, TRes> = <TArg, TRes>(arg: TArg) => Promise<TRes>;
 export interface IService {
     registerGet: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => void;
     registerPost: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => void;
-    start: (cb?: () => void) => void;
+    start: () => Promise<IService>;
     call: (serviceName: string) => (method: string) => (args: any, headers?: any) => Promise<any>;
     log: (msg: string) => void;
     stop: () => void;
+    server:http.Server;
 }
 
 export const createService = (name: string, port: number) => {
     let _services: { [name: string]: string } = {};
-    let _server;
 
     const app = express();
     app.use(cors());
@@ -57,6 +58,7 @@ export const createService = (name: string, port: number) => {
         const {service, port} = req.params;
         const endpoint = req.ip.replace('::ffff:', 'http://') + ":" + port;
         _services[service] = endpoint;
+        log(`registered ${service} on endpoint ${endpoint}`);
         res.send({ service, endpoint });
     });
 
@@ -118,11 +120,12 @@ export const createService = (name: string, port: number) => {
     }
 
     const selfRegister = (serviceName: string, port: number) => {
-        return fetch(`${serviceLocatorUrl}/register/${serviceName}/${port}`).then(res => res.json());
+        log(`self register ${serviceName} ${port}`);
+        return fetch(`${serviceLocatorUrl}/register/${serviceName}/${port}`);
     }
 
 
-    const svc:IService = {
+    const svc: IService = {
         registerGet: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => {
             if (Array.isArray(method)) {
                 (method as Api<TArg, TRes>[]).forEach(internalRegisterGet);
@@ -137,15 +140,21 @@ export const createService = (name: string, port: number) => {
                 internalRegisterPost(method as Api<TArg, TRes>);
             }
         },
-        start: (cb?: () => void) => {
-            app.use(errorHandler);
-            _server = app.listen(port, () => {
-                log('started');
+        start: () => {
+            return new Promise<IService>((resolve, reject) => {
+                app.use(errorHandler);
+                svc.server = app.listen(port, () => {
+                    log('started');
+                    resolve(svc);
 
-                /* register */
-                selfRegister(name, port)
-                    .then(res => log('registered'))
-                    .then(cb || console.log);
+                    /* register */
+                    /*
+                    selfRegister(name, port)
+                        .then(res => {
+                            log('registered');
+                            resolve(svc);
+                        });*/
+                });
             });
         },
         call: (serviceName: string) => (method: string) => (args: any, headers?: any) => {
@@ -165,8 +174,10 @@ export const createService = (name: string, port: number) => {
         },
         log,
         stop: () => {
-            _server.close();
-        }
+            log('shutdown');
+            svc.server.close();
+        },
+        server: null
     }
     return svc;
 }

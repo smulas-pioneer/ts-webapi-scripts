@@ -15,13 +15,10 @@ program
     .parse(process.argv);
 
 
-console.log('started',process.argv);
-
-
 if (program['test']) {
-    console.log('test runner mode');
+    console.info('test runner mode');
     test(program['test']);
 } else if(program['serviceLocator']) {
-    console.log('service-locator mode');
+    console.info('service-locator mode');
     startServiceLocator();
 }

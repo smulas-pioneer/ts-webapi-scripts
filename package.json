@@ -12,8 +12,8 @@
   ],
   "scripts": {
     "build": "tsc && echo built",
-    "test": "tsc && node dist/index.js --test __test__",
-    "release": "npm version patch && tsc && npm publish"
+   "test": "NODE_ENV=development mocha --opts config/mocha.opts && rm -rf test",
+     "release": "npm version patch && tsc && npm publish"
   },
   "keywords": [],
   "author": "",

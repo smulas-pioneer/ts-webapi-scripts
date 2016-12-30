@@ -1,18 +1,18 @@
-import 'mocha';
+//require('ts-node/register');
+
 import * as Mocha from 'mocha';
 import * as fs from 'fs';
 import * as path from 'path';
-require('ts-node/register');
 
 export function test(dir: string) {
     const mocha = new Mocha({
         ui:'tdd',
-        reporter:'list'
+        reporter:'list',
     });
 
     fs.readdirSync(dir).filter(function (file) {
         // Only keep the .js files
-        return file.substr(-3) === '.ts';
+        return file.substr(-3) === '.js';
 
     }).forEach(function (file) {
         mocha.addFile(
