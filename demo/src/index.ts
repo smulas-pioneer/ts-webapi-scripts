@@ -10,7 +10,7 @@ function testCall (args:any) {
     return app.call('demo')('test')({name:'test'});
 }
 
-app.registerPost([test,testCall]);
+app.post([test,testCall]);
 
 startServiceLocator();
 app.start();
