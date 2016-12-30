@@ -19,7 +19,7 @@ export const createService = (name: string, port: number) => {
     app.use(parser.urlencoded({ extended: false }));
 
     app.use((req, res, next) => {
-        log(req.method + ' ' + req.url + JSON.stringify(req.body || req.query));
+        log(req.method + ' ' + req.url + ' ' + JSON.stringify(req.body || req.query));
         next();
     });
 
@@ -40,7 +40,6 @@ export const createService = (name: string, port: number) => {
         if (!service) res.status(500).send('service arg missing');
         if (!endpoint) res.status(500).send('endpoint arg missing');
         _services[service] = endpoint;
-        log(`registered service ${service} on endpoint ${endpoint}`);
         res.send({ service, endpoint });
     });
 
@@ -48,14 +47,12 @@ export const createService = (name: string, port: number) => {
         const {service, port} = req.params;
         const endpoint = req.ip.replace('::ffff:', 'http://') + ":" + port;
         _services[service] = endpoint;
-        log(`registered service ${service} on endpoint ${endpoint}`);
         res.send({ service, endpoint });
     });
 
     const log = (msg: string) => console.info(`${port} ${name} ${msg}`);
     const internalRegisterPost = <TArg, TRes>(method: Api<TArg, TRes>) => {
         app.post('/' + method.name, (request, response) => {
-            log(`POST ${method.name} args:${JSON.stringify(request.body)}`);
             try {
                 const args = request.body as TArg;
                 method(args).then(res => {
