@@ -1,4 +1,4 @@
-import {createService} from './serviceCreator';
+import {createService,IService} from './serviceCreator';
 import {Response} from 'node-fetch';
 
 export const startServiceLocator = (cb?:()=>void)=>{

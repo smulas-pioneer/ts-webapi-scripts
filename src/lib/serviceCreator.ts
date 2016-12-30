@@ -9,6 +9,15 @@ const serviceLocatorUrl = process.env.SERVICE_LOCATOR_URL || 'http://localhost:6
 
 export type Api<TArg, TRes> = <TArg, TRes>(arg: TArg) => Promise<TRes>;
 
+export interface IService {
+    registerGet: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => void;
+    registerPost: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => void;
+    start: (cb?: () => void) => void;
+    call: (serviceName: string) => (method: string) => (args: any, headers?: any) => Promise<any>;
+    log: (msg: string) => void;
+    stop: () => void;
+}
+
 export const createService = (name: string, port: number) => {
     let _services: { [name: string]: string } = {};
     let _server;
@@ -112,7 +121,8 @@ export const createService = (name: string, port: number) => {
         return fetch(`${serviceLocatorUrl}/register/${serviceName}/${port}`).then(res => res.json());
     }
 
-    return {
+
+    const svc:IService = {
         registerGet: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => {
             if (Array.isArray(method)) {
                 (method as Api<TArg, TRes>[]).forEach(internalRegisterGet);
@@ -154,9 +164,9 @@ export const createService = (name: string, port: number) => {
             });
         },
         log,
-        stop: () =>{
+        stop: () => {
             _server.close();
         }
     }
-
+    return svc;
 }
