@@ -140,9 +140,11 @@ export const createService = (name: string, port: number) => {
             log(`call ${serviceName}/${method} ${JSON.stringify(args)}`);
             return getService(serviceName).then(endpoint => {
                 return fetch(endpoint + '/' + method, {
-                    headers,
-                    method: 'post',
-                    body: args
+                    headers:{
+                    },
+                    method: 'POST',
+                    body: JSON.stringify(args),
+                                    
                 }).then(res => res.json());
             });
         },
