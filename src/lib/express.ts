@@ -100,7 +100,7 @@ export const createService = (name: string, port: number) => {
         } else {
             return fetch(serviceLocatorUrl + '/services/' + name).then(res => res.text()).then(
                 endpoint => {
-                    log (`endpoint for ${name} is ${endpoint}`);
+                    log(`endpoint for ${name} is ${endpoint}`);
                     _services[name] = endpoint;
                     return endpoint;
                 }
@@ -140,11 +140,13 @@ export const createService = (name: string, port: number) => {
             log(`call ${serviceName}/${method} ${JSON.stringify(args)}`);
             return getService(serviceName).then(endpoint => {
                 return fetch(endpoint + '/' + method, {
-                    headers:{
+                    headers: {...headers,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
                     },
                     method: 'POST',
                     body: JSON.stringify(args),
-                                    
+
                 }).then(res => res.json());
             });
         },
