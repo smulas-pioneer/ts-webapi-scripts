@@ -94,14 +94,13 @@ export const createService = (name: string, port: number) => {
         res.send(err);
     }
 
-
-
     const getService = (name: string) => {
         if (_services[name]) {
             return Promise.resolve(_services[name]);
         } else {
             return fetch(serviceLocatorUrl + '/services/' + name).then(res => res.text()).then(
                 endpoint => {
+                    log (`endpoint for ${name} is ${endpoint}`);
                     _services[name] = endpoint;
                     return endpoint;
                 }
