@@ -171,7 +171,6 @@ export const createService = (name: string, port: number) => {
 
                 }).then(res => res.json().then(res2=>{
                     log(`call result ${JSON.stringify(res2)}`);
-                    console.log(res2);
                     return res2;
                 }));
             });
