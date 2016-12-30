@@ -56,11 +56,10 @@ export const createService = (name: string, port: number) => {
             try {
                 const args = request.body as TArg;
                 method(args).then(res => {
-                    log(`OK  : ${JSON.stringify(res)}`);
+                    log(`OK  :${request.url} ${JSON.stringify(res)}`);
                     response.send(res);
                 }).catch(err => {
-                    log(`ERR : ${JSON.stringify(err)}`);
-                    response.status(610).send(err);
+                    log(`ERR : ${request.url} ${JSON.stringify(err)}`);
                 });
             } catch (err) {
                 response.status(611).send(err);
@@ -74,10 +73,10 @@ export const createService = (name: string, port: number) => {
             try {
                 const args = request.query as TArg;
                 method(args).then(res => {
-                    log(`OK  : ${JSON.stringify(res)}`);
+                    log(`OK  :${request.url} ${JSON.stringify(res)}`);
                     response.send(res);
                 }).catch(err => {
-                    log(`ERR : ${JSON.stringify(err)}`);
+                    log(`ERR : ${request.url} ${JSON.stringify(err)}`);
                     response.status(610).send(err);
                 });
             } catch (err) {
