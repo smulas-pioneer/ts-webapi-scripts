@@ -1,6 +1,6 @@
 {
   "name": "ts-webapi-scripts",
-  "version": "1.0.37",
+  "version": "1.0.38",
   "description": "typescript webapi scripts",
   "repository": {
     "url": "https://github.com/smulas/ts-webapi-scripts.git"
@@ -12,8 +12,8 @@
   ],
   "scripts": {
     "build": "tsc && echo built",
-   "test": "NODE_ENV=development mocha --opts config/mocha.opts && rm -rf test",
-     "release": "npm version patch && tsc && npm publish"
+    "test": "NODE_ENV=development mocha --opts config/mocha.opts && rm -rf test",
+    "release": "npm version patch && tsc && npm publish"
   },
   "keywords": [],
   "author": "",
