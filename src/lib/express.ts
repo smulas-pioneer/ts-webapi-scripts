@@ -32,7 +32,7 @@ export const createService = (name: string, port: number) => {
     });
 
     app.get('/services/:serviceName', (req, res) => {
-        res.send(_services[req["serviceName"]]);
+        res.send(_services[req.params["serviceName"]]);
     });
 
     app.get('/register', (req, res) => {
