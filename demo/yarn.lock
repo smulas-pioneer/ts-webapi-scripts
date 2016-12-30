@@ -743,8 +743,8 @@ ts-node@^1.7.3:
     yn "^1.2.0"
 
 ts-webapi-scripts@*:
-  version "1.0.29"
-  resolved "https://registry.yarnpkg.com/ts-webapi-scripts/-/ts-webapi-scripts-1.0.29.tgz#11732221b63a14c6193b0770f92239b717456de1"
+  version "1.0.30"
+  resolved "https://registry.yarnpkg.com/ts-webapi-scripts/-/ts-webapi-scripts-1.0.30.tgz#68a30d2dfb57d1c9d59e61f4ba38a3cf48ebe23b"
   dependencies:
     "@types/body-parser" "^0.0.33"
     "@types/commander" "^2.3.31"
