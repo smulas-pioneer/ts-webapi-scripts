@@ -17,6 +17,10 @@ export const createService = (name: string, port: number) => {
     app.options('*', cors());
     app.use(parser.json());
     app.use(parser.urlencoded({ extended: false }));
+
+    app.use((req,res,next)=>{
+        log(req.url);
+    });
     app.get('/ver', (req, res) => {
         res.send('1.0.0');
     });
