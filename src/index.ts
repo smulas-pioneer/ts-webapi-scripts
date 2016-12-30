@@ -1,5 +1,5 @@
 
-export * from './lib/express';
+export * from './lib/serviceCreator';
 
 /* scripts */
 import { startServiceLocator } from './lib/serviceLocator';

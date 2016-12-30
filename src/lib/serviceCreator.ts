@@ -11,6 +11,7 @@ export type Api<TArg, TRes> = <TArg, TRes>(arg: TArg) => Promise<TRes>;
 
 export const createService = (name: string, port: number) => {
     let _services: { [name: string]: string } = {};
+    let _server;
 
     const app = express();
     app.use(cors());
@@ -126,20 +127,23 @@ export const createService = (name: string, port: number) => {
                 internalRegisterPost(method as Api<TArg, TRes>);
             }
         },
-        start: () => {
+        start: (cb?: () => void) => {
             app.use(errorHandler);
-            app.listen(port, () => {
+            _server = app.listen(port, () => {
                 log('started');
 
                 /* register */
-                selfRegister(name, port).then(res => log('registered'));
+                selfRegister(name, port)
+                    .then(res => log('registered'))
+                    .then(cb || console.log);
             });
         },
         call: (serviceName: string) => (method: string) => (args: any, headers?: any) => {
             log(`call ${serviceName}/${method} ${JSON.stringify(args)}`);
             return getService(serviceName).then(endpoint => {
                 return fetch(endpoint + '/' + method, {
-                    headers: {...headers,
+                    headers: {
+                        ...headers,
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     },
@@ -149,7 +153,10 @@ export const createService = (name: string, port: number) => {
                 }).then(res => res.json());
             });
         },
-        log
+        log,
+        stop: () =>{
+            _server.close();
+        }
     }
 
 }
