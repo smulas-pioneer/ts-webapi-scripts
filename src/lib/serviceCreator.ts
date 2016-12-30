@@ -11,12 +11,15 @@ const serviceLocatorUrl = process.env.SERVICE_LOCATOR_URL || 'http://localhost:6
 export type Api<TArg, TRes> = <TArg, TRes>(arg: TArg) => Promise<TRes>;
 
 export interface IService {
-    registerGet: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => void;
-    registerPost: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => void;
+    name: string,
+    port: number,
+    get: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => void;
+    post: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => void;
     start: () => Promise<IService>;
     call: (serviceName: string) => (method: string) => (args: any, headers?: any) => Promise<any>;
     log: (msg: string) => void;
     stop: () => void;
+    register: (serviceName:string, endpoint:string) =>void;
     server:http.Server;
 }
 
@@ -50,28 +53,33 @@ export const createService = (name: string, port: number) => {
         const {service, endpoint} = req.query;
         if (!service) res.status(500).send('service arg missing');
         if (!endpoint) res.status(500).send('endpoint arg missing');
-        _services[service] = endpoint;
+        internalRegister(service,endpoint);
         res.send({ service, endpoint });
     });
 
     app.get('/register/:service/:port', (req, res) => {
         const {service, port} = req.params;
         const endpoint = req.ip.replace('::ffff:', 'http://') + ":" + port;
-        _services[service] = endpoint;
-        log(`registered ${service} on endpoint ${endpoint}`);
+        internalRegister(service,endpoint);
         res.send({ service, endpoint });
     });
 
+    const internalRegister = (serviceName:string, endpoint:string) =>{
+         _services[serviceName] = endpoint;
+        log(`registered ${serviceName} on endpoint ${endpoint}`);
+    }
+
     const log = (msg: string) => console.info(`${port} ${name} ${msg}`);
-    const internalRegisterPost = <TArg, TRes>(method: Api<TArg, TRes>) => {
+    const internalPost = <TArg, TRes>(method: Api<TArg, TRes>) => {
         app.post('/' + method.name, (request, response) => {
             try {
                 const args = request.body as TArg;
                 method(args).then(res => {
-                    log(`OK  :${request.url} ${JSON.stringify(res)}`);
-                    response.send(res);
+                    log(`OK  :${request.url} ${JSON.stringify({data:res})}`);
+                    response.send({data:res});
                 }).catch(err => {
                     log(`ERR : ${request.url} ${JSON.stringify(err)}`);
+                    response.status(610).send(err);
                 });
             } catch (err) {
                 response.status(611).send(err);
@@ -79,14 +87,13 @@ export const createService = (name: string, port: number) => {
         });
     }
 
-    const internalRegisterGet = <TArg, TRes>(method: Api<TArg, TRes>) => {
+    const internalGet = <TArg, TRes>(method: Api<TArg, TRes>) => {
         app.get('/' + method.name, (request, response) => {
-            log(`POST ${method.name} args:${JSON.stringify(request.query)}`);
             try {
                 const args = request.query as TArg;
                 method(args).then(res => {
-                    log(`OK  :${request.url} ${JSON.stringify(res)}`);
-                    response.send(res);
+                    log(`OK  :${request.url} ${JSON.stringify({data:res})}`);
+                    response.send({data:res});
                 }).catch(err => {
                     log(`ERR : ${request.url} ${JSON.stringify(err)}`);
                     response.status(610).send(err);
@@ -126,18 +133,19 @@ export const createService = (name: string, port: number) => {
 
 
     const svc: IService = {
-        registerGet: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => {
+        register: internalRegister,
+        get: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => {
             if (Array.isArray(method)) {
-                (method as Api<TArg, TRes>[]).forEach(internalRegisterGet);
+                (method as Api<TArg, TRes>[]).forEach(internalGet);
             } else {
-                internalRegisterGet(method as Api<TArg, TRes>);
+                internalGet(method as Api<TArg, TRes>);
             }
         },
-        registerPost: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => {
+        post: <TArg, TRes>(method: Api<TArg, TRes> | Api<TArg, TRes>[]) => {
             if (Array.isArray(method)) {
-                (method as Api<TArg, TRes>[]).forEach(internalRegisterPost);
+                (method as Api<TArg, TRes>[]).forEach(internalPost);
             } else {
-                internalRegisterPost(method as Api<TArg, TRes>);
+                internalPost(method as Api<TArg, TRes>);
             }
         },
         start: () => {
@@ -146,20 +154,12 @@ export const createService = (name: string, port: number) => {
                 svc.server = app.listen(port, () => {
                     log('started');
                     resolve(svc);
-
-                    /* register */
-                    /*
-                    selfRegister(name, port)
-                        .then(res => {
-                            log('registered');
-                            resolve(svc);
-                        });*/
                 });
             });
         },
         call: (serviceName: string) => (method: string) => (args: any, headers?: any) => {
-            log(`call ${serviceName}/${method} ${JSON.stringify(args)}`);
             return getService(serviceName).then(endpoint => {
+                log(`call  ${serviceName}=> ${endpoint}/${method} ${JSON.stringify(args)}`);
                 return fetch(endpoint + '/' + method, {
                     headers: {
                         ...headers,
@@ -169,7 +169,11 @@ export const createService = (name: string, port: number) => {
                     method: 'POST',
                     body: JSON.stringify(args),
 
-                }).then(res => res.json());
+                }).then(res => res.json().then(res2=>{
+                    log(`call result ${JSON.stringify(res2)}`);
+                    console.log(res2);
+                    return res2;
+                }));
             });
         },
         log,
@@ -177,7 +181,9 @@ export const createService = (name: string, port: number) => {
             log('shutdown');
             svc.server.close();
         },
-        server: null
+        server: null,
+        name,
+        port
     }
     return svc;
 }
